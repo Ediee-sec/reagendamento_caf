@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Scraping Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1><i class="fas fa-spider"></i> Web Scraping Dashboard</h1>
+      <p class="subtitle">Automação de Agendamentos Portal CAF</p>
+    </header>
+
+    <div class="dashboard">
+      <div class="status-card">
+        <div class="status-header">
+          <h3><i class="fas fa-info-circle"></i> Status do Sistema</h3>
+          <div class="status-indicator" id="statusIndicator">
+            <span class="status-dot idle"></span>
+            <span id="statusText">Aguardando</span>
+          </div>
+        </div>
+        
+        <div class="timer-section">
+          <div class="timer">
+            <i class="fas fa-clock"></i>
+            <span id="tempo">00:00:00</span>
+          </div>
+          <div class="current-step" id="currentStep">Pronto para iniciar</div>
+        </div>
+
+        <div class="progress-section">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+            <span class="progress-text" id="progressText">0%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls-card">
+        <h3><i class="fas fa-cogs"></i> Controles</h3>
+        <div class="form-group">
+          <label for="emailInput"><i class="fas fa-envelope"></i> E-mail:</label>
+          <input type="email" id="emailInput" class="form-control" placeholder="Digite seu e-mail">
+        </div>
+        <div class="form-group">
+          <label for="passwordInput"><i class="fas fa-lock"></i> Senha:</label>
+          <input type="password" id="passwordInput" class="form-control" placeholder="Digite sua senha">
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary" id="startBtn" onclick="iniciar()">
+            <i class="fas fa-play"></i> Iniciar
+          </button>
+          <button class="btn btn-danger" id="cancelBtn" onclick="cancelar()" disabled>
+            <i class="fas fa-stop"></i> Cancelar
+          </button>
+        </div>
+      </div>
+
+      <div class="results-card" id="resultsCard" style="display: none;">
+        <h3><i class="fas fa-table"></i> Resultados</h3>
+        <div class="results-info">
+          <span id="recordsCount">0 registros encontrados</span>
+          <button class="btn btn-secondary btn-small" id="downloadBtn" onclick="downloadResults()" disabled>
+            <i class="fas fa-download"></i> Download CSV
+          </button>
+        </div>
+        <div class="table-container" id="tableContainer">
+          <!-- Tabela será inserida aqui dinamicamente -->
+        </div>
+      </div>
+
+      <div class="logs-card">
+        <h3><i class="fas fa-terminal"></i> Log de Atividades</h3>
+        <div class="logs-container" id="logsContainer">
+          <div class="log-entry info">
+            <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+            <span class="message">Sistema iniciado e pronto para uso</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
