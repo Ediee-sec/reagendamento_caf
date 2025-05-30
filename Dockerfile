@@ -1,5 +1,5 @@
 # Dockerfile
-FROM python:3.9
+FROM python:3.10.12
 
 RUN apt-get update && apt-get install -y \
     wget \
