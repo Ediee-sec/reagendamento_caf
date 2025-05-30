@@ -43,7 +43,7 @@ RUN pip install --upgrade pip && \
     pip --version && \
     python --version
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 COPY . .
 
