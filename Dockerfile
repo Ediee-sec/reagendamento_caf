@@ -25,13 +25,13 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y \
-    cloud-init \
-    python3-dbus \
-    python3-apt \
-    protonvpn-cli \
-    ufw \
-    unattended-upgrades
+# RUN apt-get update && apt-get install -y \
+#     cloud-init \
+#     python3-dbus \
+#     python3-apt \
+#     protonvpn-cli \
+#     ufw \
+#     unattended-upgrades
 
 
 
