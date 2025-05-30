@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Web Scraping Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -78,7 +78,7 @@
         <h3><i class="fas fa-terminal"></i> Log de Atividades</h3>
         <div class="logs-container" id="logsContainer">
           <div class="log-entry info">
-            <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+            <span class="timestamp" id="timestamp"></span>
             <span class="message">Sistema iniciado e pronto para uso</span>
           </div>
         </div>
@@ -86,6 +86,10 @@
     </div>
   </div>
 
+  <script>
+    // Corrige o problema do timestamp dinâmico que estava usando template literal incorretamente
+    document.getElementById('timestamp').textContent = new Date().toLocaleTimeString();
+  </script>
   <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 </html>
