@@ -58,7 +58,6 @@ htmlcov/
 
 # Arquivos de log
 *.log
-logs/
 
 # Arquivos de banco de dados
 *.sqlite3
