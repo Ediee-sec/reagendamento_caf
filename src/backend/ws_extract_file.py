@@ -28,9 +28,6 @@ class Envoriment:
         # self.username = os.environ.get('VAR_PROJ_CAF_USERNAME')
         # self.password = os.environ.get('VAR_PROJ_CAF_PASSWORD')
         
-        if not all([self.url, self.username, self.password]):
-            SysLog().log_message('ERROR', 'Variáveis de ambiente não configuradas corretamente.')
-            raise ValueError("As variáveis de ambiente VAR_PROJ_CAF_SITE, VAR_PROJ_CAF_USERNAME e VAR_PROJ_CAF_PASSWORD devem ser definidas.")
         
 class ConfigReschedule():
     def __init__(self):
