@@ -259,4 +259,4 @@ if __name__ == '__main__':
     os.makedirs("temp", exist_ok=True)
     
     # Rodar aplicação
-    app.run(debug=True, threaded=True)
+    app.run(host='0.0.0.0', port=5000, debug=True, use_debugger=True, use_reloader=False)
