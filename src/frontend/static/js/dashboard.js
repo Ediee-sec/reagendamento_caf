@@ -58,12 +58,12 @@ class ScrapingDashboard {
     this.elements.currentStep.textContent = step;
   }
   
-  addLog(message, type = "info") {
-    const timestamp = new Date().toLocaleTimeString();
-    const logEntry = document.createElement('div');
+  addLog(message, type = "info", timestamp = null) { // Adicionado parâmetro timestamp
+    const displayTimestamp = timestamp || new Date().toLocaleTimeString(); // Usa o timestamp fornecido ou gera um novo
+    const logEntry = document.createElement("div");
     logEntry.className = `log-entry ${type}`;
     logEntry.innerHTML = `
-      <span class="timestamp">${timestamp}</span>
+      <span class="timestamp">${displayTimestamp}</span>
       <span class="message">${message}</span>
     `;
     
@@ -201,6 +201,23 @@ class ScrapingDashboard {
       // Atualizar step atual
       if (data.current_step) {
         this.updateCurrentStep(data.current_step);
+      }
+
+      // Atualizar logs de atividade
+      if (data.activity_log && Array.isArray(data.activity_log)) {
+        // Limpar logs antigos se necessário ou apenas adicionar novos
+        // Aqui, vamos limpar e adicionar todos para simplicidade, 
+        // mas uma abordagem mais eficiente seria adicionar apenas os novos.
+        this.elements.logsContainer.innerHTML = ''; // Limpa logs existentes
+        data.activity_log.forEach(logMsg => {
+          // Extrair timestamp e mensagem se o formato for consistente
+          const match = logMsg.match(/^\s*\[(.*?)\]\s*(.*)$/);
+          if (match) {
+            this.addLog(match[2], "info", match[1]); // Passa timestamp existente
+          } else {
+            this.addLog(logMsg, "info"); // Usa timestamp atual se não encontrar
+          }
+        });
       }
       
       // Verificar se processo terminou

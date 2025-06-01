@@ -111,7 +111,9 @@ class SafeActions:
 
 
 class WSExtractFile(Envoriment, ConfigReschedule):
-    def __init__(self):
+    def __init__(self, log_callback=None): # Adicionado log_callback
+        super().__init__()
+        self.log_callback = log_callback # Armazena o callback
         super().__init__()
         SysLog().log_message('INFO', 'Iniciando Web Scraping para extração de arquivos')
         self.chrome_options = Options()
@@ -213,6 +215,10 @@ class WSExtractFile(Envoriment, ConfigReschedule):
                 SafeActions(self.driver, "//div[@id='editModalCadastrarAgendamento']//input[@id='submit_toggle_registration']", 'click').execute()
                 time.sleep(6)
                 SysLog().log_message('INFO', f'Reagendamento concluído para o telefone: {row["FONE"]}')
+                # Chamar o callback com a mensagem formatada
+                if self.log_callback:
+                    log_message = f"Reagendamento realizado com sucesso para: {row.get('NOME', 'N/A')} - {row['FONE']}"
+                    self.log_callback(log_message)
             df.to_csv(os.path.join(str(Path(__file__).resolve().parents[2]), 'data', 'csv', 'results', 'reagendados.csv'), index=False)
             Mail(df).send_mail()
         except Exception as e:
