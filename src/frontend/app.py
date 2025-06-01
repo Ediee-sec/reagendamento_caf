@@ -32,8 +32,12 @@ class ScrapingState:
         self.result_df = pd.DataFrame()
         self.error_message = ""
         self.current_step = ""
+        self.activity_log = [] # Adicionado para logs de atividade
+        self.log_lock = threading.Lock() # Lock para thread safety
         
     def reset(self):
+        with self.log_lock: # Usar lock ao modificar a lista
+            self.activity_log.clear()
         self.is_running = False
         self.cancel_requested = False
         self.progress = 0
@@ -84,10 +88,19 @@ def start_scraping():
             scraping_state.current_step = "Inicializando..."
             scraping_state.progress = 10
             
+            # Definir a função de callback para logs
+            def add_log_entry(message):
+                with scraping_state.log_lock:
+                    scraping_state.activity_log.append(f"[{datetime.now().strftime('%H:%M:%S')}] {message}")
+                    # Opcional: Limitar o tamanho do log para evitar consumo excessivo de memória
+                    max_log_size = 100
+                    if len(scraping_state.activity_log) > max_log_size:
+                        scraping_state.activity_log = scraping_state.activity_log[-max_log_size:]
+            
             if scraping_state.cancel_requested:
                 return
                 
-            job = WSExtractFile()
+            job = WSExtractFile(log_callback=add_log_entry) # Passar o callback
             
             scraping_state.current_step = "Fazendo login..."
             scraping_state.progress = 20
@@ -192,7 +205,8 @@ def get_status():
         "progress": scraping_state.progress,
         "current_step": scraping_state.current_step,
         "duration": duration,
-        "records_count": len(scraping_state.result_df) if not scraping_state.result_df.empty else 0
+        "records_count": len(scraping_state.result_df) if not scraping_state.result_df.empty else 0,
+        "activity_log": scraping_state.activity_log[:] # Retorna uma cópia da lista
     }
     
     if scraping_state.status == "error":
