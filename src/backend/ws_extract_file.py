@@ -177,7 +177,6 @@ class WSExtractFile(Envoriment, ConfigReschedule):
             SafeActions(self.driver, '//*[@id="accordion"]/li[3]', 'click').execute()
             SafeActions(self.driver, '//*[@id="collapse-report"]/a[3]', 'click').execute()
             self.open_new_window(2)
-            SafeActions(self.driver, '/html/body/div[3]/section/div[2]/div[1]/div/div/div[2]/button[1]', 'click').execute()
             
             # Enviar log para o frontend
             if self.log_callback:
@@ -191,9 +190,10 @@ class WSExtractFile(Envoriment, ConfigReschedule):
     def filter(self):
         SysLog().log_message('INFO', 'Iniciando filtro de dados')
         try:
-            time.sleep(15)  # Espera o elemento ser carregado
-            SafeActions(self.driver, "//button[normalize-space()='Filtrar']", 'click').execute()
-            time.sleep(5)  # Espera o modal de filtro abrir
+            time.sleep(5)  # Espera o elemento ser carregado
+            #SafeActions(self.driver, "(//button[normalize-space()='Filtrar'])[1]", 'click').execute()
+            SafeActions(self.driver, '/html/body/div[3]/section/div[2]/div[1]/div/div/div[2]/button[1]', 'click').execute()
+            time.sleep(2)  # Espera o modal de filtro abrir
             SafeActions(self.driver, '//*[@id="filterStatus"]/option[3]', 'click').execute()
             SafeActions(self.driver, '//*[@id="filterUsuario"]/option[2]', 'click').execute()
             SafeActions(self.driver, '//*[@id="filterStatusAgendamento"]/option[2]', 'click').execute()
