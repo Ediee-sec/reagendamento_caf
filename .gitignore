@@ -56,7 +56,8 @@ htmlcov/
 .mypy_cache/
 .tox/
 
-# Arquivos de log
+# Arquivos 
+*.csv
 *.log
 
 # Arquivos de banco de dados

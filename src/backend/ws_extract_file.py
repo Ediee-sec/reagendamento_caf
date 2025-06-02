@@ -11,6 +11,7 @@ from pathlib import Path
 import sys
 import os
 from datetime import datetime, timedelta
+import pandas as pd
 
 sys.path.append(os.path.join(str(Path(__file__).resolve().parents[2])))
 from src.backend.treatment import ReadFile 
@@ -111,11 +112,12 @@ class SafeActions:
 
 
 class WSExtractFile(Envoriment, ConfigReschedule):
-    def __init__(self, log_callback=None): # Adicionado log_callback
+    def __init__(self, log_callback=None, date_filter='accumulated', specific_date=None): # Adicionado log_callback e parâmetros de filtro
         super().__init__()
         self.log_callback = log_callback # Armazena o callback
-        super().__init__()
-        SysLog().log_message('INFO', 'Iniciando Web Scraping para extração de arquivos')
+        self.date_filter = date_filter # Tipo de filtro: accumulated, today, specific
+        self.specific_date = specific_date # Data específica para filtro (se aplicável)
+        SysLog().log_message('INFO', f'Iniciando Web Scraping com filtro: {date_filter}{" - " + specific_date if specific_date else ""}')
         self.chrome_options = Options()
         self.chrome_options.add_experimental_option("prefs", {
             "download.default_directory": os.path.join(str(Path(__file__).resolve().parents[2]), 'data', 'csv', 'downloads'),
@@ -160,40 +162,77 @@ class WSExtractFile(Envoriment, ConfigReschedule):
             SafeActions(self.driver, '//*[@id="login-box-inner"]/form/div[2]/input', 'send_keys', password).execute()
             SafeActions(self.driver, '//*[@id="login-box-inner"]/form/div[6]/div/button', 'click').execute()
             SysLog().log_message('INFO', f'Login realizado com sucesso para {username}')
+            self.log_callback(f"Login realizado com sucesso para {username}") if self.log_callback else None
         except Exception as e:
             raise Exception(f"Erro ao fazer login: {e}")
         
         
     def navegation(self):
         SysLog().log_message('INFO', 'Iniciando navegação no sistema')
-        SafeActions(self.driver, '/html/body/div/div/div/section/div[3]/div[2]/div[2]/div/div/div[2]/div/a', 'click').execute()
-        self.open_new_window(1)
-        time.sleep(15)
-        SafeActions(self.driver, '//*[@id="side-menu-btn"]/i', 'click').execute()
-        SafeActions(self.driver, '//*[@id="accordion"]/li[3]', 'click').execute()
-        SafeActions(self.driver, '//*[@id="collapse-report"]/a[3]', 'click').execute()
-        self.open_new_window(2)
-        SafeActions(self.driver, '/html/body/div[3]/section/div[2]/div[1]/div/div/div[2]/button[1]', 'click').execute()
+        try:
+            SafeActions(self.driver, '/html/body/div/div/div/section/div[3]/div[2]/div[2]/div/div/div[2]/div/a', 'click').execute()
+            self.open_new_window(1)
+            time.sleep(5)
+            SafeActions(self.driver, '//*[@id="side-menu-btn"]/i', 'click').execute()
+            SafeActions(self.driver, '//*[@id="accordion"]/li[3]', 'click').execute()
+            SafeActions(self.driver, '//*[@id="collapse-report"]/a[3]', 'click').execute()
+            self.open_new_window(2)
+            SafeActions(self.driver, '/html/body/div[3]/section/div[2]/div[1]/div/div/div[2]/button[1]', 'click').execute()
+            
+            # Enviar log para o frontend
+            if self.log_callback:
+                self.log_callback("Navegação no sistema concluída com sucesso")
+                
+        except Exception as e:
+            if self.log_callback:
+                self.log_callback(f"Erro durante navegação: {str(e)}")
+            raise
         
     def filter(self):
         SysLog().log_message('INFO', 'Iniciando filtro de dados')
-        time.sleep(5)  # Espera o elemento ser carregado
-        SafeActions(self.driver, "//button[normalize-space()='Filtrar']", 'click').execute()
-        time.sleep(2)  # Espera o modal de filtro abrir
-        SafeActions(self.driver, '//*[@id="filterStatus"]/option[3]', 'click').execute()
-        SafeActions(self.driver, '//*[@id="filterUsuario"]/option[2]', 'click').execute()
-        SafeActions(self.driver, '//*[@id="filterStatusAgendamento"]/option[2]', 'click').execute()
-        SafeActions(self.driver, '//*[@id="filterDataInicial"]', 'send_keys', '01/01/2020').execute()
-        SafeActions(self.driver, '//*[@id="filterDataFinal"]', 'send_keys', self.today).execute()
-        SafeActions(self.driver, '//*[@id="filterModal"]/div/div/div[3]/button[2]', 'click').execute()
-        time.sleep(3)
-        SafeActions(self.driver, '/html/body/div[3]/section/div[2]/div[1]/div/div/div[2]/button[2]', 'click').execute()  # Exportar CSV
-        time.sleep(10)  # Espera o download do CSV ser concluído
+        try:
+            time.sleep(5)  # Espera o elemento ser carregado
+            SafeActions(self.driver, "//button[normalize-space()='Filtrar']", 'click').execute()
+            time.sleep(2)  # Espera o modal de filtro abrir
+            SafeActions(self.driver, '//*[@id="filterStatus"]/option[3]', 'click').execute()
+            SafeActions(self.driver, '//*[@id="filterUsuario"]/option[2]', 'click').execute()
+            SafeActions(self.driver, '//*[@id="filterStatusAgendamento"]/option[2]', 'click').execute()
+            SafeActions(self.driver, '//*[@id="filterDataInicial"]', 'send_keys', '01/01/2020').execute()
+            SafeActions(self.driver, '//*[@id="filterDataFinal"]', 'send_keys', self.today).execute()
+            SafeActions(self.driver, '//*[@id="filterModal"]/div/div/div[3]/button[2]', 'click').execute()
+            time.sleep(3)
+            SafeActions(self.driver, '/html/body/div[3]/section/div[2]/div[1]/div/div/div[2]/button[2]', 'click').execute()  # Exportar CSV
+            time.sleep(10)  # Espera o download do CSV ser concluído
+            
+            # Enviar log para o frontend
+            if self.log_callback:
+                self.log_callback("Filtros aplicados e dados exportados com sucesso")
+                
+        except Exception as e:
+            if self.log_callback:
+                self.log_callback(f"Erro ao aplicar filtros: {str(e)}")
+            raise
         
     
     def reschedule(self):
         SysLog().log_message('INFO', 'Iniciando reagendamento de dados')
-        df = ReadFile().data()
+        # Passar os parâmetros de filtro para o ReadFile
+        data = ReadFile(date_filter=self.date_filter, specific_date=self.specific_date).data()
+        df = data['dataframe']
+
+        
+        # Enviar contagens para o callback, se disponível
+        if self.log_callback:
+            self.log_callback({
+                'type': 'pending_counts',
+                'counts': data
+            })
+            self.log_callback(f"Total de pendentes: {data['total_pending']} (Hoje: {data['pending_today']}, Acumulados: {data['pending_accumulated']})")
+            
+        # Armazenar contagens para uso durante o reagendamento
+        self.pending_today_count = data['pending_today']
+        self.pending_accumulated_count = data['pending_accumulated']
+        
         try:
             for index, row in df.iterrows():
                 SysLog().log_message('INFO', f'Reagendando o telefone: {row["FONE"]}')
@@ -215,6 +254,29 @@ class WSExtractFile(Envoriment, ConfigReschedule):
                 SafeActions(self.driver, "//div[@id='editModalCadastrarAgendamento']//input[@id='submit_toggle_registration']", 'click').execute()
                 time.sleep(6)
                 SysLog().log_message('INFO', f'Reagendamento concluído para o telefone: {row["FONE"]}')
+                
+                # Enviar log para o frontend após o reagendamento
+                if self.log_callback:
+                    # Determinar se o registro é de hoje ou acumulado
+                    data_agendamento = row.get('DATA_AGENDAMENTO')
+                    now = pd.to_datetime(datetime.now().date())
+                    
+                    # Decrementar contadores apropriados
+                    if data_agendamento == now:
+                        self.pending_today_count -= 1
+                    elif data_agendamento < now:
+                        self.pending_accumulated_count -= 1
+                    
+                    # Enviar contagens atualizadas
+                    self.log_callback({
+                        'type': 'pending_counts_update',
+                        'counts': {
+                            'pending_today': self.pending_today_count,
+                            'pending_accumulated': self.pending_accumulated_count,
+                            'total_pending': self.pending_today_count + self.pending_accumulated_count
+                        }
+                    })
+                                
                 # Chamar o callback com a mensagem formatada
                 if self.log_callback:
                     log_message = f"Reagendamento realizado com sucesso para: {row.get('NOME', 'N/A')} - {row['FONE']}"

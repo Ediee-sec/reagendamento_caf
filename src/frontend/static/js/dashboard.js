@@ -19,9 +19,13 @@ class ScrapingDashboard {
       recordsCount: document.getElementById("recordsCount"),
       downloadBtn: document.getElementById("downloadBtn"),
       tableContainer: document.getElementById("tableContainer"),
-      emailInput: document.getElementById("emailInput"), // Adicionado
-      passwordInput: document.getElementById("passwordInput"), // Adicionado
-      logsContainer: document.getElementById("logsContainer")
+      emailInput: document.getElementById("emailInput"),
+      passwordInput: document.getElementById("passwordInput"),
+      logsContainer: document.getElementById("logsContainer"),
+      // Elementos para contadores de pendentes
+      pendingTodayCount: document.getElementById("pendingTodayCount"),
+      pendingAccumulatedCount: document.getElementById("pendingAccumulatedCount"),
+      totalPendingCount: document.getElementById("totalPendingCount")
     };
     
     this.initializeUI();
@@ -58,12 +62,46 @@ class ScrapingDashboard {
     this.elements.currentStep.textContent = step;
   }
   
-  addLog(message, type = "info", timestamp = null) { // Adicionado parâmetro timestamp
-    const displayTimestamp = timestamp || new Date().toLocaleTimeString(); // Usa o timestamp fornecido ou gera um novo
+  // Método para atualizar os contadores de pendentes
+  updateCurrentStep(step) {
+    this.elements.currentStep.textContent = step;
+  }
+  
+  // Método para atualizar os contadores de pendentes
+  updatePendingCounts(counts) {
+    if (!counts) return;
+    
+    // Atualizar os elementos na interface
+    if (this.elements.pendingTodayCount) {
+      this.elements.pendingTodayCount.textContent = counts.today || 0;
+      this.elements.pendingTodayCount.classList.add('updated');
+      setTimeout(() => {
+        this.elements.pendingTodayCount.classList.remove('updated');
+      }, 1000);
+    }
+    
+    if (this.elements.pendingAccumulatedCount) {
+      this.elements.pendingAccumulatedCount.textContent = counts.accumulated || 0;
+      this.elements.pendingAccumulatedCount.classList.add('updated');
+      setTimeout(() => {
+        this.elements.pendingAccumulatedCount.classList.remove('updated');
+      }, 1000);
+    }
+    
+    if (this.elements.totalPendingCount) {
+      this.elements.totalPendingCount.textContent = counts.total || 0;
+      this.elements.totalPendingCount.classList.add('updated');
+      setTimeout(() => {
+        this.elements.totalPendingCount.classList.remove('updated');
+      }, 1000);
+    }
+  }
+  
+  addLog(message, type = "info") {
     const logEntry = document.createElement("div");
     logEntry.className = `log-entry ${type}`;
     logEntry.innerHTML = `
-      <span class="timestamp">${displayTimestamp}</span>
+      <span class="timestamp">${new Date().toLocaleTimeString()}</span>
       <span class="message">${message}</span>
     `;
     
@@ -108,29 +146,57 @@ class ScrapingDashboard {
       // Iniciar monitoramento de status
       this.statusIntervalId = setInterval(() => this.checkStatus(), 1000);
       
-        // Obter email e senha
+      // Obter email e senha
       const email = this.elements.emailInput.value;
       const password = this.elements.passwordInput.value;
 
-      // Validar se os campos foram preenchidos (opcional, mas recomendado)
+      // Obter filtro de data selecionado do select
+      const dateFilterSelect = document.getElementById('dateFilterSelect');
+      const selectedFilter = dateFilterSelect.value;
+
+      // Obter data específica se necessário
+      let specificDate = null;
+      if (selectedFilter === 'specific') {
+        specificDate = document.getElementById('specificDate').value;
+        if (!specificDate) {
+          this.addLog("Por favor, selecione uma data específica.", "warning");
+          this.finalizarProcesso("idle", "Aguardando");
+          this.elements.startBtn.disabled = false;
+          this.elements.cancelBtn.disabled = true;
+          this.isRunning = false;
+          return;
+        }
+      }
+      
+      // Validar se os campos foram preenchidos
       if (!email || !password) {
         this.addLog("Por favor, preencha o e-mail e a senha.", "warning");
-        this.finalizarProcesso("idle", "Aguardando"); // Reverte o estado visual
-        this.elements.startBtn.disabled = false; // Reabilita o botão
-        this.elements.cancelBtn.disabled = true;
-        this.isRunning = false; // Garante que o estado interno seja resetado
-        return; // Interrompe a execução
+        this.finalizarProcesso("idle", "Aguardando");
+        return;
+      }
+      
+      console.log('Fazendo requisição para /start...');
+      
+      // Chamar endpoint de início, enviando email, senha e filtro de data
+      const requestData = { 
+        email: email, 
+        password: password,
+        date_filter: selectedFilter
+      };
+
+      // Adicionar data específica se necessário
+      if (selectedFilter === 'specific') {
+        requestData.specific_date = specificDate;
       }
 
-      console.log('Fazendo requisição para /start...');
+      this.addLog(`Iniciando com filtro: ${selectedFilter}${specificDate ? ' - ' + specificDate : ''}`, "info");
 
-      // Chamar endpoint de início, enviando email e senha
       const response = await fetch('/start', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ email: email, password: password }) // Enviar dados no corpo
+        body: JSON.stringify(requestData)
       });
       
       console.log('Resposta recebida:', response.status);
@@ -199,25 +265,44 @@ class ScrapingDashboard {
       }
       
       // Atualizar step atual
-      if (data.current_step) {
-        this.updateCurrentStep(data.current_step);
+      if (data.pending_counts) {
+        this.updatePendingCounts(data.pending_counts);
       }
-
+      
+      // Atualizar contadores de pendentes
+      if (data.pending_counts) {
+        this.updatePendingCounts(data.pending_counts);
+      }
+      
       // Atualizar logs de atividade
       if (data.activity_log && Array.isArray(data.activity_log)) {
-        // Limpar logs antigos se necessário ou apenas adicionar novos
-        // Aqui, vamos limpar e adicionar todos para simplicidade, 
-        // mas uma abordagem mais eficiente seria adicionar apenas os novos.
-        this.elements.logsContainer.innerHTML = ''; // Limpa logs existentes
+        // Limpar logs antigos
+        this.elements.logsContainer.innerHTML = '';
+        
+        // Adicionar logs do backend
         data.activity_log.forEach(logMsg => {
+          const logEntry = document.createElement("div");
+          logEntry.className = "log-entry info";
+          
           // Extrair timestamp e mensagem se o formato for consistente
           const match = logMsg.match(/^\s*\[(.*?)\]\s*(.*)$/);
           if (match) {
-            this.addLog(match[2], "info", match[1]); // Passa timestamp existente
+            logEntry.innerHTML = `
+              <span class="timestamp">${match[1]}</span>
+              <span class="message">${match[2]}</span>
+            `;
           } else {
-            this.addLog(logMsg, "info"); // Usa timestamp atual se não encontrar
+            logEntry.innerHTML = `
+              <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+              <span class="message">${logMsg}</span>
+            `;
           }
+          
+          this.elements.logsContainer.appendChild(logEntry);
         });
+        
+        // Rolar para o final
+        this.elements.logsContainer.scrollTop = this.elements.logsContainer.scrollHeight;
       }
       
       // Verificar se processo terminou

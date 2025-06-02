@@ -1,0 +1,85 @@
+/* Estilos para a seção de contagens de pendentes */
+.pending-counts-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 20px;
+  background-color: #f8fafc;
+  padding: 15px;
+  border-radius: var(--border-radius-sm);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.pending-count-item {
+  flex: 1;
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  background-color: white;
+  border-radius: var(--border-radius-sm);
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+
+.pending-count-item:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+}
+
+.pending-count-item.total {
+  background-color: #f1f5f9;
+  border-left: 3px solid var(--primary-color);
+}
+
+.count-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 5px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.count-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.pending-count-item.total .count-value {
+  color: var(--primary-hover);
+  font-size: 1.7rem;
+}
+
+/* Efeito de atualização para os contadores */
+.count-value.updated {
+  animation: count-update 1s ease;
+}
+
+@keyframes count-update {
+  0% {
+    transform: scale(1);
+    color: var(--primary-color);
+  }
+  50% {
+    transform: scale(1.2);
+    color: var(--success-color);
+  }
+  100% {
+    transform: scale(1);
+    color: var(--primary-color);
+  }
+}
+
+/* Ajustes responsivos para a seção de contagens */
+@media (max-width: 768px) {
+  .pending-counts-section {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .pending-count-item {
+    width: 100%;
+  }
+}

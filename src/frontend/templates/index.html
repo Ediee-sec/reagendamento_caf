@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Web Scraping Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pending_counts.css') }}">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -22,6 +23,22 @@
           <div class="status-indicator" id="statusIndicator">
             <span class="status-dot idle"></span>
             <span id="statusText">Aguardando</span>
+          </div>
+        </div>
+
+        <!-- Seção de contadores de pendentes -->
+        <div class="pending-counts-section">
+          <div class="pending-count-item">
+            <span class="count-label">Pendentes Hoje:</span>
+            <span class="count-value" id="pendingTodayCount">0</span>
+          </div>
+          <div class="pending-count-item">
+            <span class="count-label">Pendentes Acum.:</span>
+            <span class="count-value" id="pendingAccumulatedCount">0</span>
+          </div>
+          <div class="pending-count-item total">
+            <span class="count-label">Total Pendentes:</span>
+            <span class="count-value" id="totalPendingCount">0</span>
           </div>
         </div>
         
@@ -50,6 +67,19 @@
         <div class="form-group">
           <label for="passwordInput"><i class="fas fa-lock"></i> Senha:</label>
           <input type="password" id="passwordInput" class="form-control" placeholder="Digite sua senha">
+        </div>
+        <div class="form-group">
+          <label for="dateFilterSelect"><i class="fas fa-filter"></i> Filtro de Data:</label>
+          <select id="dateFilterSelect" class="form-control">
+            <option value="accumulated">Pendente Acumulado</option>
+            <option value="today">Pendente Hoje</option>
+            <option value="accumulated_today" selected>Pendente Acumulado + Hoje</option>
+            <option value="specific">Pendente Dia Específico</option>
+          </select>
+        </div>
+        <div class="form-group" id="specificDateGroup">
+          <label for="specificDate"><i class="fas fa-calendar"></i> Data Específica:</label>
+          <input type="date" id="specificDate" class="form-control">
         </div>
         <div class="btn-group">
           <button class="btn btn-primary" id="startBtn" onclick="iniciar()">
@@ -90,6 +120,7 @@
     // Corrige o problema do timestamp dinâmico que estava usando template literal incorretamente
     document.getElementById('timestamp').textContent = new Date().toLocaleTimeString();
   </script>
+  <script src="{{ url_for('static', filename='js/filter_control.js') }}"></script>
   <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 </html>
