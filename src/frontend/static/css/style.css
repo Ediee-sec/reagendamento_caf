@@ -693,6 +693,111 @@ body {
   transform: translateY(1px);
 }
 
+/* Estilos para os filtros de data */
+.filter-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.radio-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  background-color: #f8fafc;
+  border-radius: var(--border-radius-sm);
+  transition: var(--transition);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+}
+
+.radio-group:hover {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.radio-group input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--primary-color);
+  border-radius: 50%;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  transition: var(--transition);
+}
+
+.radio-group input[type="radio"]:checked {
+  background-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+}
+
+.radio-group input[type="radio"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: white;
+}
+
+.radio-group label {
+  font-weight: 500;
+  cursor: pointer;
+  flex: 1;
+  margin-bottom: 0;
+}
+
+/* Estilo para o select de filtro */
+select.form-control {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1em;
+  padding-right: 2.5rem;
+  cursor: pointer;
+}
+
+select.form-control:focus {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+
+select.form-control option {
+  padding: 10px;
+  font-weight: 500;
+}
+
+/* Estilo para o campo de data específica */
+#specificDateGroup {
+  transition: var(--transition);
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+}
+
+#specificDateGroup.visible {
+  max-height: 100px;
+  opacity: 1;
+  margin-bottom: 25px;
+}
+
+input[type="date"].form-control {
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: var(--text-primary);
+}
+
 /* Ajustes específicos para telas muito pequenas */
 @media (max-width: 480px) {
   .header h1 {
@@ -712,5 +817,13 @@ body {
   
   .current-step {
     font-size: 0.95rem;
+  }
+  
+  .filter-options {
+    gap: 8px;
+  }
+  
+  .radio-group {
+    padding: 8px 12px;
   }
 }

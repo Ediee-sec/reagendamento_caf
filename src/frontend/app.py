@@ -34,6 +34,9 @@ class ScrapingState:
         self.current_step = ""
         self.activity_log = [] # Adicionado para logs de atividade
         self.log_lock = threading.Lock() # Lock para thread safety
+        self.pending_today_count = 0
+        self.pending_accumulated_count = 0
+        self.total_pending_count = 0
         
     def reset(self):
         with self.log_lock: # Usar lock ao modificar a lista
@@ -47,6 +50,9 @@ class ScrapingState:
         self.result_df = pd.DataFrame()
         self.error_message = ""
         self.current_step = ""
+        self.pending_today_count = 0
+        self.pending_accumulated_count = 0
+        self.total_pending_count = 0
 
 scraping_state = ScrapingState()
 
@@ -58,12 +64,19 @@ def index():
 def start_scraping():
     global scraping_state
     
-    # Obter dados da requisição (email e senha)
+    # Obter dados da requisição (email, senha e filtro de data)
     data = request.get_json()
-    if not data or 'email' not in data or 'password' not in data:
+    if not data or 'email' not in data or 'password' not in data or 'date_filter' not in data:
         return jsonify({
             "success": False,
-            "error": "E-mail e senha são obrigatórios."
+            "error": "E-mail, senha e filtro de data são obrigatórios."
+        }), 400
+        
+    # Validar filtro de data específica se necessário
+    if data.get('date_filter') == 'specific' and 'specific_date' not in data:
+        return jsonify({
+            "success": False,
+            "error": "Data específica é obrigatória quando o filtro 'Pendente Dia Específico' é selecionado."
         }), 400
 
     # Verificar se já está rodando
@@ -84,23 +97,41 @@ def start_scraping():
             logger.info("Iniciando processo de scraping...")
             email = data.get('email')
             password = data.get('password')
+            date_filter = data.get('date_filter')
+            specific_date = data.get('specific_date')
+            
             logger.info(f"Recebido e-mail: {email}") # Log para confirmação
+            logger.info(f"Filtro de data: {date_filter}{' - ' + specific_date if specific_date else ''}")
+            
             scraping_state.current_step = "Inicializando..."
             scraping_state.progress = 10
             
             # Definir a função de callback para logs
-            def add_log_entry(message):
+            def add_log_entry(message_or_data):
                 with scraping_state.log_lock:
-                    scraping_state.activity_log.append(f"[{datetime.now().strftime('%H:%M:%S')}] {message}")
-                    # Opcional: Limitar o tamanho do log para evitar consumo excessivo de memória
-                    max_log_size = 100
-                    if len(scraping_state.activity_log) > max_log_size:
-                        scraping_state.activity_log = scraping_state.activity_log[-max_log_size:]
+                    # Verificar se é uma mensagem de texto ou um objeto de dados
+                    if isinstance(message_or_data, dict):
+                        # Se for um objeto de dados com contagens de pendentes
+                        if message_or_data.get('type') == 'pending_counts':
+                            counts = message_or_data.get('counts', {})
+                            scraping_state.pending_today_count = counts.get('pending_today', 0)
+                            scraping_state.pending_accumulated_count = counts.get('pending_accumulated', 0)
+                            scraping_state.total_pending_count = counts.get('total_pending', 0)
+                            
+                        # Se for uma atualização de contagens durante o processo
+                        elif message_or_data.get('type') == 'pending_counts_update':
+                            counts = message_or_data.get('counts', {})
+                            scraping_state.pending_today_count = counts.get('pending_today', 0)
+                            scraping_state.pending_accumulated_count = counts.get('pending_accumulated', 0)
+                            scraping_state.total_pending_count = counts.get('total_pending', 0)
+                    else:
+                        # Se for uma mensagem de texto normal
+                        scraping_state.activity_log.append(f"[{datetime.now().strftime('%H:%M:%S')}] {message_or_data}")
             
             if scraping_state.cancel_requested:
                 return
                 
-            job = WSExtractFile(log_callback=add_log_entry) # Passar o callback
+            job = WSExtractFile(log_callback=add_log_entry, date_filter=date_filter, specific_date=specific_date) # Passar o callback e filtros
             
             scraping_state.current_step = "Fazendo login..."
             scraping_state.progress = 20
@@ -206,7 +237,12 @@ def get_status():
         "current_step": scraping_state.current_step,
         "duration": duration,
         "records_count": len(scraping_state.result_df) if not scraping_state.result_df.empty else 0,
-        "activity_log": scraping_state.activity_log[:] # Retorna uma cópia da lista
+        "activity_log": scraping_state.activity_log[:],  # Retorna uma cópia da lista
+        "pending_counts": {
+            "today": scraping_state.pending_today_count,
+            "accumulated": scraping_state.pending_accumulated_count,
+            "total": scraping_state.total_pending_count
+        }
     }
     
     if scraping_state.status == "error":
