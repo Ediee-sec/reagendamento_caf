@@ -9,6 +9,14 @@ from pathlib import Path
 from datetime import datetime
 import json
 
+from pathlib import Path
+import os
+import sys
+sys.path.append(os.path.join(str(Path(__file__).resolve().parents[2])))
+
+# Importar bibliotecas internas
+from src.backend.models.validate_user import validate_user
+
 # Configuração de logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -71,6 +79,13 @@ def start_scraping():
             "success": False,
             "error": "E-mail, senha e filtro de data são obrigatórios."
         }), 400
+    
+    # Validar credenciais do usuário
+    if not validate_user(data['email'], data['password']):
+        return jsonify({
+            "success": False,
+            "error": "Credenciais inválidas."
+        }), 401
         
     # Validar filtro de data específica se necessário
     if data.get('date_filter') == 'specific' and 'specific_date' not in data:

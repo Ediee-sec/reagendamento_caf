@@ -125,7 +125,7 @@ class WSExtractFile(Envoriment, ConfigReschedule):
             "download.directory_upgrade": True,
             "safebrowsing.enabled": True
         })
-        self.chrome_options.add_argument("--headless")  
+        #self.chrome_options.add_argument("--headless")  
         self.chrome_options.add_argument("--no-sandbox")
         self.chrome_options.add_argument("--disable-dev-shm-usage")
         self.chrome_options.add_argument("--disable-gpu")
@@ -161,6 +161,13 @@ class WSExtractFile(Envoriment, ConfigReschedule):
             SafeActions(self.driver, '//*[@id="login-box-inner"]/form/div[1]/input', 'send_keys', username).execute()
             SafeActions(self.driver, '//*[@id="login-box-inner"]/form/div[2]/input', 'send_keys', password).execute()
             SafeActions(self.driver, '//*[@id="login-box-inner"]/form/div[6]/div/button', 'click').execute()
+            
+            if SafeActions(self.driver, "//strong[contains(text(),'LOGIN OU SENHA INCORRETOS OU SEU USUÁRIO ESTÁ INAT')]", 'get_text').execute():
+                self.log_callback(f"Login falhou: usuário ou senha incorretos. Reinicie o navegador e tente novamente") if self.log_callback else None
+                quit()
+                raise Exception("Login falhou: usuário ou senha incorretos.")
+                
+            
             SysLog().log_message('INFO', f'Login realizado com sucesso para {username}')
             self.log_callback(f"Login realizado com sucesso para {username}") if self.log_callback else None
         except Exception as e:
