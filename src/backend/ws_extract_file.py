@@ -160,14 +160,7 @@ class WSExtractFile(Envoriment, ConfigReschedule):
         try:
             SafeActions(self.driver, '//*[@id="login-box-inner"]/form/div[1]/input', 'send_keys', username).execute()
             SafeActions(self.driver, '//*[@id="login-box-inner"]/form/div[2]/input', 'send_keys', password).execute()
-            SafeActions(self.driver, '//*[@id="login-box-inner"]/form/div[6]/div/button', 'click').execute()
-            
-            if SafeActions(self.driver, "//strong[contains(text(),'LOGIN OU SENHA INCORRETOS OU SEU USUÁRIO ESTÁ INAT')]", 'get_text').execute():
-                self.log_callback(f"Login falhou: usuário ou senha incorretos. Reinicie o navegador e tente novamente") if self.log_callback else None
-                quit()
-                raise Exception("Login falhou: usuário ou senha incorretos.")
-                
-            
+            SafeActions(self.driver, '//*[@id="login-box-inner"]/form/div[6]/div/button', 'click').execute() 
             SysLog().log_message('INFO', f'Login realizado com sucesso para {username}')
             self.log_callback(f"Login realizado com sucesso para {username}") if self.log_callback else None
         except Exception as e:
