@@ -73,7 +73,9 @@ def start_scraping():
     global scraping_state
     
     # Obter dados da requisição (email, senha e filtro de data)
+    print("Raw body:", request.get_data())
     data = request.get_json()
+    print("Parsed JSON:", data) 
     if not data or 'email' not in data or 'password' not in data or 'date_filter' not in data:
         return jsonify({
             "success": False,
