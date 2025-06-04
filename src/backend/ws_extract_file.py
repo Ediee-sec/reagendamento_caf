@@ -125,7 +125,7 @@ class WSExtractFile(Envoriment, ConfigReschedule):
             "download.directory_upgrade": True,
             "safebrowsing.enabled": True
         })
-        #self.chrome_options.add_argument("--headless")  
+        self.chrome_options.add_argument("--headless")  
         self.chrome_options.add_argument("--no-sandbox")
         self.chrome_options.add_argument("--disable-dev-shm-usage")
         self.chrome_options.add_argument("--disable-gpu")
