@@ -117,6 +117,7 @@ class WSExtractFile(Envoriment, ConfigReschedule):
         self.log_callback = log_callback # Armazena o callback
         self.date_filter = date_filter # Tipo de filtro: accumulated, today, specific
         self.specific_date = specific_date # Data específica para filtro (se aplicável)
+        self.cancel_requested = False
         SysLog().log_message('INFO', f'Iniciando Web Scraping com filtro: {date_filter}{" - " + specific_date if specific_date else ""}')
         self.chrome_options = Options()
         self.chrome_options.add_experimental_option("prefs", {
@@ -138,6 +139,8 @@ class WSExtractFile(Envoriment, ConfigReschedule):
         self.driver.get(self.url)
         self.driver.maximize_window()
         self.today = datetime.today().strftime('%m/%d/%Y')
+        self.timeout = 300  # 5 minutos
+        self.start_time = time.time()
   
     def open_new_window(self, position):
         SysLog().log_message('INFO', f'Abrindo nova janela na posição {position}')
@@ -292,6 +295,21 @@ class WSExtractFile(Envoriment, ConfigReschedule):
             self.driver.quit()
             SysLog().log_message('INFO', 'Processo de reagendamento concluído com sucesso')        
 
+    def check_timeout(self):
+        if time.time() - self.start_time > self.timeout:
+            raise TimeoutError("Operação excedeu o tempo limite")
+        
+    def cancel(self):
+        """Método para cancelar a execução do scraping"""
+        self.cancel_requested = True
+        SysLog().log_message('INFO', 'Cancelamento solicitado')
+        if self.log_callback:
+            self.log_callback("Cancelamento solicitado pelo usuário")
+        try:
+            if hasattr(self, 'driver'):
+                self.driver.quit()
+        except Exception as e:
+            SysLog().log_message('ERROR', f'Erro ao fechar o driver: {str(e)}', e)
         
 # job = WSExtractFile()
 # job.login()
