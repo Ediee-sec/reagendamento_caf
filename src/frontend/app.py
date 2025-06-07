@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, send_from_directory
 import pandas as pd
 import threading
 import sys
@@ -8,6 +8,8 @@ import logging
 from pathlib import Path
 from datetime import datetime
 import json
+import unittest
+import shutil
 
 from pathlib import Path
 import os
@@ -344,7 +346,16 @@ def download_results():
 @app.route('/temp/<filename>')
 def serve_temp_file(filename):
     """Servir arquivos temporários"""
-    return app.send_static_file(f"../temp/{filename}")
+    # Construct the absolute path to the temp directory at the project root
+    project_root = str(Path(__file__).resolve().parents[2])
+    temp_dir_path = os.path.join(project_root, 'temp')
+    
+    try:
+        # return app.send_static_file(f"../temp/{filename}") # Original line commented
+        return send_from_directory(temp_dir_path, filename)
+    except Exception as e:
+        logger.error(f"Erro ao servir arquivo temporário {filename}: {str(e)}")
+        return jsonify({"success": False, "error": "Arquivo não encontrado ou erro ao servir."}), 404
 
 @app.errorhandler(404)
 def not_found(error):
