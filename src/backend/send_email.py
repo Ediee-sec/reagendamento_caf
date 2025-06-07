@@ -37,8 +37,8 @@ class Mail:
     def setup_smtp(self):
         try:
             self.server = smtplib.SMTP(
-                os.getenv('VAR_PROJ_CAF_SMTP_SERVER'),
-                int(os.getenv('VAR_PROJ_CAF_SMTP_PORT'))
+                os.getenv('VAR_PROJ_CAF_SERVER'),
+                int(os.getenv('VAR_PROJ_CAF_PORT'))
             )
             self.server.starttls()
             self.server.login(self.email, self.password)
