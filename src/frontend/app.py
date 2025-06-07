@@ -206,6 +206,12 @@ def start_scraping():
             scraping_state.end_time = datetime.now()
         finally:
             scraping_state.is_running = False
+            # Garantir que o driver seja fechado
+            if hasattr(scraping_state, 'job') and scraping_state.job:
+                try:
+                    scraping_state.job.driver.quit()
+                except:
+                    pass
 
     # Iniciar thread
     scraping_state.thread = threading.Thread(target=run_scraper)
@@ -227,17 +233,41 @@ def cancel_scraping():
             "message": "Nenhum processo em execução para cancelar."
         })
     
-    scraping_state.cancel_requested = True
-    scraping_state.status = "cancelled"
-    scraping_state.end_time = datetime.now()
-    scraping_state.current_step = "Cancelado pelo usuário"
-    
-    logger.info("Cancelamento solicitado pelo usuário.")
-    
-    return jsonify({
-        "success": True,
-        "message": "Solicitação de cancelamento enviada."
-    })
+    try:
+        # Marcar o estado como cancelado
+        scraping_state.cancel_requested = True
+        scraping_state.status = "cancelled"
+        scraping_state.end_time = datetime.now()
+        scraping_state.current_step = "Cancelado pelo usuário"
+        
+        # Se o job estiver disponível, chamar o método de cancelamento
+        if hasattr(scraping_state, 'job') and scraping_state.job:
+            scraping_state.job.cancel()
+        
+        # Limpar recursos
+        if hasattr(scraping_state, 'driver'):
+            try:
+                scraping_state.driver.quit()
+            except:
+                pass
+        
+        # Atualizar estado
+        scraping_state.is_running = False
+        scraping_state.progress = 0
+        
+        logger.info("Cancelamento realizado com sucesso.")
+        
+        return jsonify({
+            "success": True,
+            "message": "Processo cancelado com sucesso."
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao cancelar processo: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": f"Erro ao cancelar processo: {str(e)}"
+        }), 500
 
 @app.route('/status', methods=['GET'])
 def get_status():
@@ -262,11 +292,15 @@ def get_status():
         }
     }
     
+    # Adicionar verificação de conclusão
+    if scraping_state.status == "completed":
+        response_data["is_completed"] = True
+        if not scraping_state.result_df.empty:
+            response_data["data"] = scraping_state.result_df.to_dict(orient='records')
+            response_data["download_available"] = True
+    
     if scraping_state.status == "error":
         response_data["error"] = scraping_state.error_message
-    
-    if scraping_state.status == "completed" and not scraping_state.result_df.empty:
-        response_data["data"] = scraping_state.result_df.to_dict(orient='records')
     
     return jsonify(response_data)
 
