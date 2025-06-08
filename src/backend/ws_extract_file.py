@@ -17,7 +17,7 @@ sys.path.append(os.path.join(str(Path(__file__).resolve().parents[2])))
 from src.backend.treatment import ReadFile 
 from src.backend.send_email import Mail
 from src.backend.sys_log import SysLog
-
+from src.backend.models.load_data import LoadData
 SysLog().config_log()
 
 
@@ -222,8 +222,7 @@ class WSExtractFile(Envoriment, ConfigReschedule):
         # Passar os parâmetros de filtro para o ReadFile
         data = ReadFile(date_filter=self.date_filter, specific_date=self.specific_date).data()
         df = data['dataframe']
-
-        
+    
         # Enviar contagens para o callback, se disponível
         if self.log_callback:
             self.log_callback({
@@ -285,9 +284,11 @@ class WSExtractFile(Envoriment, ConfigReschedule):
                     log_message = f"Reagendamento realizado com sucesso para: {row.get('NOME', 'N/A')} - {row['FONE']}"
                     self.log_callback(log_message)
             df.to_csv(os.path.join(str(Path(__file__).resolve().parents[2]), 'data', 'csv', 'results', 'reagendados.csv'), index=False)
+            LoadData(df).insert()
             Mail(df).send_mail()
         except Exception as e:
             df.to_csv(os.path.join(str(Path(__file__).resolve().parents[2]), 'data', 'csv', 'results', 'reagendados.csv'), index=False)
+            LoadData(df).insert()
             Mail(df).send_mail()
             SysLog().log_message('ERROR', f'Erro ao reagendar o telefone: {row["FONE"]}', e)
         finally: 
