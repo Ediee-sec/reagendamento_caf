@@ -17,6 +17,9 @@ class ConnectionPostgres(Credentials):
         super().__init__()
         self.engine = create_engine(self.get_connection_string())
 
+    def get_engine(self):
+        return self.engine
+
     def execute_query(self, query: str):
         with self.engine.connect() as connection:
             result = connection.execute(text(query))
