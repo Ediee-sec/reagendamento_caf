@@ -245,7 +245,7 @@ class WSExtractFile(Envoriment, ConfigReschedule):
                 SafeActions(self.driver, '//*[@id="openModalLinkAgendamento"]/button', 'click').execute()
                 self.dedup_elements_by_select('//select[@id="status"]', 'Agendado')
                 SafeActions(self.driver, '//*[@id="motivo"]/option[10]', 'click').execute()
-                SafeActions(self.driver, '//*[@id="obs"]', 'send_keys', 'Mandei campanha vigente - Daiane').execute()
+                SafeActions(self.driver, '//*[@id="obs"]', 'send_keys', 'Reagendado pela Coordenadora Daiane Gomes, pendente Acumulado').execute()
                 SafeActions(self.driver, '//*[@id="tipo_agendamento"]/option[2]', 'click').execute()
                 SafeActions(self.driver, '//*[@id="tipo_cadastro"]/option[3]', 'click').execute()
                 
@@ -321,4 +321,5 @@ class WSExtractFile(Envoriment, ConfigReschedule):
 
 
        
+
 
